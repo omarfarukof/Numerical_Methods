@@ -73,7 +73,6 @@ def lambda2sym(lambda_function , symble = None):
 #########################################################
 
 # Bisection Method
-
 def bisection_method( func , x_lower , x_upper , true_value = None , terminal_error = 5 , iteration_limit=None , significant_digit = None , analysis = False):
     # iteration_exit = 100
 
@@ -118,7 +117,6 @@ def bisection_method( func , x_lower , x_upper , true_value = None , terminal_er
         return x_r
 
 # False-Position Method
-
 def false_position_method( func , x_lower , x_upper , true_value = None , terminal_error = 5 , iteration_limit=None , significant_digit = None , analysis = False):
     # iteration_exit = 100
 
@@ -164,10 +162,7 @@ def false_position_method( func , x_lower , x_upper , true_value = None , termin
     else:
         return x_r
 
-
-
 # Fixed-Point Iteration
-
 def fixed_point_iteration( func , variable , x_guess , gofx_format = True , true_value = None , terminal_error = 5 , iteration_limit=None , significant_digit = None , analysis = False ):
     
     if not check_func( variable , sym=True ):
@@ -176,8 +171,8 @@ def fixed_point_iteration( func , variable , x_guess , gofx_format = True , true
     if not check_func( func , sym=True ):
         func = lambda2sym( func , variable )
 
-    if not gofx_format:
-        func = func + variable
+    # if not gofx_format:
+    #     func = func + variable
 
     # Creating terminal_error for significant_digit
     if significant_digit:
@@ -214,8 +209,142 @@ def fixed_point_iteration( func , variable , x_guess , gofx_format = True , true
     else:
         return x_new
 
-    
-        pass
-
-
 # Newton-Raphson
+def newton_raphson_method( func , variable , x_guess , func_diff = None , true_value = None , terminal_error = 5 , iteration_limit=None , significant_digit = None , analysis = False ):
+
+    if not check_func( func , sym=True ):
+        if not check_func( variable , sym=True ):
+            variable = sp.symbols(variable)
+        func = lambda2sym( func , variable )
+
+    # Creating terminal_error for significant_digit
+    if significant_digit:
+        terminal_error = 0.5 * ( 10**(2 - significant_digit) )
+
+    if func_diff:
+        if check_func(func_diff , lamb=True):
+            func_diff = lambda2sym(func_diff , variable)
+        elif not check_func(f , sym=True):
+            print(">! Diff is not sym or lambda function. Evaluating Diff function.")
+            func_diff = sp.diff(func)
+        else:
+            raise ValueError("Provide a currect sym or lambda function") 
+    else: 
+        func_diff = sp.diff(func)
+
+    relative_error = 100
+    x_old = x_guess
+    iteration = 1
+    while relative_error > terminal_error:
+        
+        # if func_dif.subs(variable , x_old) < 1:
+            x_new = x_old - ( (func.subs(variable , x_old)) / (func_diff.subs(variable , x_old)) )
+            relative_error = error(x_new , x_old)
+
+            x_old = x_new
+            iteration += 1
+
+            if not iteration_limit:
+                if iteration > iteration_exit:
+                    print("Exceeding <iteration_limit>. Increase the <iteration_limit> to do longer itertation ")
+                    break 
+            elif iteration > iteration_limit:
+                break
+                      
+        
+        # else:
+        #     print("<Error:> Function will not converge.")
+        #     break
+        
+    if analysis:
+        return NM_Solution( "Newton Raphson Method" , x_old , iteration )
+    else:
+        return x_new
+    
+# Secand Method
+def secand_method(func , variable , x_1 , x_2 , true_value = None , terminal_error = 5 , iteration_limit=None , significant_digit = None , analysis = False):
+    
+
+    if check_func( func , sym=True ):
+        if not check_func( variable , sym=True ):
+            variable = sp.symbols(variable)
+
+        func = sp.lambdify( variable , func , 'numpy' )
+
+    # Creating terminal_error for significant_digit
+    if significant_digit:
+        terminal_error = 0.5 * ( 10**(2 - significant_digit) )
+
+    relative_error = 100
+    iteration = 1
+    
+    while relative_error > terminal_error:
+        
+        # if func_dif.subs(variable , x_old) < 1:
+            func_diff = ( func(x_1) - func(x_2) ) / ( x_1 - x_2 )
+            x_new = x_2 - ( (func(x_2)) / (func_diff) )
+            relative_error = error(x_new , x_2)
+
+            x_1 = x_2
+            x_2 = x_new
+            iteration += 1
+
+            if not iteration_limit:
+                if iteration > iteration_exit:
+                    print("Exceeding <iteration_limit>. Increase the <iteration_limit> to do longer itertation ")
+                    break 
+            elif iteration > iteration_limit:
+                break
+                      
+        
+        # else:
+        #     print("<Error:> Function will not converge.")
+        #     break
+        
+    if analysis:
+        return NM_Solution( "Second Method" , x_new , iteration )
+    else:
+        return x_new
+
+# Modified Second Method
+def modified_secand_method(func , variable , x_guess , func_del = 10**(-4) , true_value = None , terminal_error = 5 , iteration_limit=None , significant_digit = None , analysis = False ):
+    
+    if check_func( func , sym=True ):
+        if not check_func( variable , sym=True ):
+            variable = sp.symbols(variable)
+
+        func = sp.lambdify( variable , func , 'numpy' )
+
+    # Creating terminal_error for significant_digit
+    if significant_digit:
+        terminal_error = 0.5 * ( 10**(2 - significant_digit) )
+
+    relative_error = 100
+    iteration = 1
+    x_old = x_guess
+    while relative_error > terminal_error:
+        
+        # if func_dif.subs(variable , x_old) < 1:
+            func_diff = ( func(x_old + func_del) - func(x_old) ) / ( func_del )
+            x_new = x_old - ( (func(x_old)) / (func_diff) )
+            relative_error = error(x_new , x_old)
+
+            x_old = x_new
+            iteration += 1
+
+            if not iteration_limit:
+                if iteration > iteration_exit:
+                    print("Exceeding <iteration_limit>. Increase the <iteration_limit> to do longer itertation ")
+                    break 
+            elif iteration > iteration_limit:
+                break
+                      
+        
+        # else:
+        #     print("<Error:> Function will not converge.")
+        #     break
+        
+    if analysis:
+        return NM_Solution( "Modified Second Method" , x_new , iteration )
+    else:
+        return x_new
